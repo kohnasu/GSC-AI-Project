@@ -1,3 +1,16 @@
+############################## edit here ##############################################
+
+partner_bot.name = "Partner"
+partner_bot.persona = "心優しく親切な性格"
+prompt = f"あなたはuserの対話相手で{partner_bot.persona}の{partner_bot.name}です。"
+
+############################## edit here ##############################################
+
+# how to use
+# 1. edit prompt (if you want)
+# 2. start the app by putting in terminal "python3 main.py -l"
+# 3. stop the app by pushing "ctrl + C" while selecting terminal
+
 from slack_bolt import App 
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 import logging
@@ -8,9 +21,6 @@ from SlackBot import partner_bot
 # ログ設定
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-partner_bot.name = "Partner"
-partner_bot.persona = "心優しく親切な性格"
 
 def create_slack_app(token: str, signing_secret: str):
     app = App(token=token, signing_secret=signing_secret)
@@ -34,7 +44,7 @@ def create_slack_app(token: str, signing_secret: str):
         channel = message.get("channel")
         logger.info(f"Processing message from channel {channel}: {user_text}")
         if app.chatlog_cache[channel] == []:
-            app.chatlog_cache[channel] = [{"role": "developer", "content": f"あなたはuserの対話相手で{partner_bot.persona}の{partner_bot.name}です。"}]
+            app.chatlog_cache[channel] = [{"role": "developer", "content": prompt}]
         app.chatlog_cache[channel].append({"role": "user", "content": user_text})
         
         llm_response = get_response(app.chatlog_cache[channel])
