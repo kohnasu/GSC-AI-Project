@@ -38,10 +38,28 @@ class SlackBot:
         )
 
 partner_bot = SlackBot(
-    bot_user_oauth_token=os.getenv("PARTNER_BOT_USER_OAUTH_TOKEN"),
-    client_id=os.getenv("PARTNER_CLIENT_ID"),
-    client_secret=os.getenv("PARTNER_CLIENT_SECRET"),
-    signing_secret=os.getenv("PARTNER_SIGNING_SECRET"),
-    verification_token=os.getenv("PARTNER_VERIFICATION_TOKEN"),
-    app_level_token=os.getenv("PARTNER_APP_LEVEL_TOKEN"),
+    bot_user_oauth_token=os.getenv("PARTNER_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("PARTNER_CLIENT_ID", None),
+    client_secret=os.getenv("PARTNER_CLIENT_SECRET", None),
+    signing_secret=os.getenv("PARTNER_SIGNING_SECRET", None),
+    verification_token=os.getenv("PARTNER_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("PARTNER_APP_LEVEL_TOKEN", None),
+)
+
+ren = SlackBot(
+    bot_user_oauth_token=os.getenv("REN_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("REN_CLIENT_ID", None),
+    client_secret=os.getenv("REN_CLIENT_SECRET", None),
+    signing_secret=os.getenv("REN_SIGNING_SECRET", None),
+    verification_token=os.getenv("REN_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("REN_APP_LEVEL_TOKEN", None),
+)
+
+nagi = SlackBot(
+    bot_user_oauth_token=os.getenv("NAGI_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("NAGI_CLIENT_ID", None),
+    client_secret=os.getenv("NAGI_CLIENT_SECRET", None),
+    signing_secret=os.getenv("NAGI_SIGNING_SECRET", None),
+    verification_token=os.getenv("NAGI_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("NAGI_APP_LEVEL_TOKEN", None),
 )
