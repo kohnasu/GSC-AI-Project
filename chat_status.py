@@ -1,7 +1,11 @@
 from enum import Enum
+import time
 from utils import today_str, str_to_date
 from firebase.models import TABLE_NAMES, add_user_status
 from firebase.db import db
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ChatStatus(Enum):
     NOT_STARTED = "not_started"
@@ -50,3 +54,18 @@ def check_chat_status(user_id: str, channel_id: str):
                 "end_time": None,
             })
             return day, ChatStatus.NOT_STARTED
+
+def start_chat(user_id: str, channel_id: str):
+    today = today_str()
+    doc_ref = db.collection(TABLE_NAMES[1]).document(f"{user_id}_{channel_id}_{today}")
+    if not doc_ref.get().exists:
+        logger.error(f"User {user_id} does not exist in {channel_id}")
+        return None, None
+    doc_ref.update({
+        "start_time": time.time(),
+    })
+    day = doc_ref.get().to_dict().get("day")
+    status = judge_chat_status(doc_ref.get().to_dict())
+    if status != ChatStatus.IN_PROGRESS:
+        logger.error(f"Chat start error: {status}")
+    return day, status

@@ -11,9 +11,10 @@ from collections import defaultdict
 from llm import get_response
 from SlackBot import partner_bot, ren, nagi
 from firebase.db import db
+from mockdata import persona, name, topic
 
 from check_register_user import check_user_exists, register_user
-from chat_status import ChatStatus, check_chat_status
+from chat_status import ChatStatus, check_chat_status, start_chat
 
 
 # ログ設定
@@ -82,7 +83,9 @@ def create_slack_app(token: str, signing_secret: str):
             day, status = check_chat_status(user_id, channel)
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
-                    raise NotImplementedError("Not implemented")
+                    day, status = start_chat(user_id, channel)
+                    say(text=f"{day}日目のチャットを開始しました")
+                    return
                 say(text=f"チャットが始まっていません。{day}日目のチャットを開始するには「チャット開始」と打ってください。")
                 return
             # ここから
