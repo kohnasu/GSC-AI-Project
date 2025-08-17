@@ -13,6 +13,7 @@ class SlackBot:
         app_level_token: str|None=None,
         name: str|None=None,
         persona: str|None=None,
+        user_id: str|None=None,
     ):
         self.bot_user_oauth_token = bot_user_oauth_token
         self.client_id = client_id
@@ -22,6 +23,7 @@ class SlackBot:
         self.app_level_token = app_level_token
         self.name = name
         self.persona = persona
+        self.user_id = user_id
         
     @property
     def client(self):

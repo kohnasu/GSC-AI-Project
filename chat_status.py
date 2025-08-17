@@ -28,8 +28,8 @@ def check_chat_status(user_id: str, channel_id: str):
     else:
         query = (
             db.collection(TABLE_NAMES[1])
-            .filter("user_id", "==", user_id)
-            .filter("channel_id", "==", channel_id)
+            .where("user_id", "==", user_id)
+            .where("channel_id", "==", channel_id)
         )
         docs = query.get()
         docs = [doc.to_dict() for doc in docs]
@@ -56,16 +56,32 @@ def check_chat_status(user_id: str, channel_id: str):
             return day, ChatStatus.NOT_STARTED
 
 def start_chat(user_id: str, channel_id: str):
-    today = today_str()
-    doc_ref = db.collection(TABLE_NAMES[1]).document(f"{user_id}_{channel_id}_{today}")
-    if not doc_ref.get().exists:
-        logger.error(f"User {user_id} does not exist in {channel_id}")
+    try:
+        today = today_str()
+        doc_ref = db.collection(TABLE_NAMES[1]).document(f"{user_id}_{channel_id}_{today}")
+        if not doc_ref.get().exists:
+            logger.error(f"User {user_id} does not exist in {channel_id}")
+            return None, None
+        doc_ref.update({
+            "start_time": time.time(),
+        })
+        day = doc_ref.get().to_dict().get("day")
+        return day, ChatStatus.IN_PROGRESS
+    except Exception as e:
+        logger.error(f"Chat start error: {e}")
         return None, None
-    doc_ref.update({
-        "start_time": time.time(),
-    })
-    day = doc_ref.get().to_dict().get("day")
-    status = judge_chat_status(doc_ref.get().to_dict())
-    if status != ChatStatus.IN_PROGRESS:
-        logger.error(f"Chat start error: {status}")
-    return day, status
+
+def end_chat(user_id: str, channel_id: str):
+    try:
+        today = today_str()
+        doc_ref = db.collection(TABLE_NAMES[1]).document(f"{user_id}_{channel_id}_{today}")
+        if not doc_ref.get().exists:
+            logger.error(f"User {user_id} does not exist in {channel_id}")
+            return
+        doc_ref.update({
+            "end_time": time.time(),
+        })
+        return doc_ref.get().to_dict().get("day"), ChatStatus.COMPLETED
+    except Exception as e:
+        logger.error(f"Chat end error: {e}")
+        return None, None
