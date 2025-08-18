@@ -12,6 +12,12 @@ class ChatStatus(Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
 
+class ChatFinish(Enum):
+    CAN_FINISH = "can_finish"
+    NOT_YET = "not_yet"
+    MUST_FINISH = "must_finish"
+
+
 def judge_chat_status(user_status: dict):
     if user_status.get("start_time") is None:
         return ChatStatus.NOT_STARTED

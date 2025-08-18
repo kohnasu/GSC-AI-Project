@@ -7,7 +7,6 @@
 from slack_bolt import App 
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 import logging
-from collections import defaultdict
 from llm import get_response
 from SlackBot import ren, nagi
 from firebase.db import db
@@ -49,10 +48,11 @@ nagi.persona = "心優しく親切な性格"
 current_bot = ren
 
 PERSONALITY_TEMPLATE = "あなたは{username}の対話相手で{persona}の{name}です。\n"
-CHATLOG_TEMPLATE = "{name}: {content}\n"
+CHATLOG_TEMPLATE = "[{name}] {content}\n"
 
 PROMPT_TEMPLATE = """{personality}。
 これまでの会話の流れに沿うように応答してください。
+[]内の名前は含めないでください。
 
 これまでの会話の流れ:
 {chatlog}
@@ -80,6 +80,9 @@ logger = logging.getLogger(__name__)
 
 def create_slack_app(token: str, signing_secret: str):
     app = App(token=token, signing_secret=signing_secret)
+    
+    # # FastAPI用の設定
+    # app.logger = logger
 
     # すべてのイベントをログに出力
     # @app.middleware
