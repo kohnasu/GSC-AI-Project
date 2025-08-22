@@ -4,6 +4,7 @@ from utils import today_str, str_to_date
 from firebase.models import TABLE_NAMES, add_user_status
 from firebase.db import db
 import logging
+from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +26,30 @@ def judge_chat_status(user_status: dict):
         return ChatStatus.IN_PROGRESS
     return ChatStatus.COMPLETED
 
+def judge_chat_finish(user_status: dict):
+    current_time = time.time()
+    start_time = user_status.get("start_time")
+    diff = current_time - start_time
+    if diff > MUST_FINISH_MINUTES * 60:
+        return ChatFinish.MUST_FINISH
+    elif diff > CAN_FINISH_MINUTES * 60:
+        return ChatFinish.CAN_FINISH
+    return ChatFinish.NOT_YET
+
+
 def check_chat_status(user_id: str, channel_id: str):
     today = today_str()
     doc_ref = db.collection(TABLE_NAMES[1]).document(f"{user_id}_{channel_id}_{today}")
     if doc_ref.get().exists:
         user_status = doc_ref.get().to_dict()
-        return user_status.get("day"), judge_chat_status(user_status)
+        day = user_status.get("day")
+        status = judge_chat_status(user_status)
+        finish = judge_chat_finish(user_status)
+        return {
+            "day": day,
+            "status": status,
+            "finish": finish,
+        }
     else:
         query = (
             db.collection(TABLE_NAMES[1])
@@ -48,7 +67,11 @@ def check_chat_status(user_id: str, channel_id: str):
                 "start_time": None,
                 "end_time": None,
             })
-            return 1, ChatStatus.NOT_STARTED
+            return {
+                "day": 1,
+                "status": ChatStatus.NOT_STARTED,
+                "finish": None,
+            }
         else:
             day = max([doc.get("day") for doc in docs]) + 1
             add_user_status({
@@ -59,7 +82,24 @@ def check_chat_status(user_id: str, channel_id: str):
                 "start_time": None,
                 "end_time": None,
             })
-            return day, ChatStatus.NOT_STARTED
+            return {
+                "day": day,
+                "status": ChatStatus.NOT_STARTED,
+                "finish": None,
+            }
+
+def judge_chat_finish(user_status: dict):
+    current_time = time.time()
+    start_time = user_status.get("start_time")
+    diff = current_time - start_time
+    if start_time is None:
+        return ChatFinish.NOT_YET   
+    elif diff < 10 * 60:
+        return ChatFinish.NOT_YET
+    elif diff > 30 * 60:
+        return ChatFinish.MUST_FINISH
+    return ChatFinish.CAN_FINISH
+
 
 def start_chat(user_id: str, channel_id: str):
     try:
@@ -72,7 +112,11 @@ def start_chat(user_id: str, channel_id: str):
             "start_time": time.time(),
         })
         day = doc_ref.get().to_dict().get("day")
-        return day, ChatStatus.IN_PROGRESS
+        return {
+            "day": day,
+            "status": ChatStatus.IN_PROGRESS,
+            "finish": None,
+        }
     except Exception as e:
         logger.error(f"Chat start error: {e}")
         return None, None

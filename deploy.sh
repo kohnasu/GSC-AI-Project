@@ -61,7 +61,7 @@ gcloud run deploy $SERVICE_NAME \
   --memory 2Gi \
   --cpu 1 \
   --max-instances 10 \
-  --min-instances 1
+#   --min-instances 1
 
 # env.yaml を削除
 echo "🧹 env.yaml を削除中..."

@@ -1,7 +1,7 @@
 
 # how to use
 # 1. edit prompt (if you want)
-# 2. start the app by putting in terminal "python3 main.py -l"
+# 2. start the app by putting in terminal "python3 local.py"
 # 3. stop the app by pushing "ctrl + C" while selecting terminal
 
 from slack_bolt import App 
@@ -11,9 +11,10 @@ from llm import get_response
 from SlackBot import ren, nagi
 from firebase.db import db
 from mockdata import persona, name, topic
+from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES
 
 from check_register_user import check_user_exists, register_user
-from chat_status import ChatStatus, check_chat_status, start_chat, end_chat 
+from chat_status import ChatStatus, ChatFinish, check_chat_status, start_chat, end_chat 
 from process_conversation import add_chatdata, get_chatdata
 
 chatbots = {
@@ -60,6 +61,9 @@ PROMPT_TEMPLATE = """{personality}。
 """
 
 ############################## edit here ##############################################
+
+
+
 def create_chatlog(user_id: str, username: str, channel: str, day: int):
     if username is None:
         username = "user"
@@ -118,26 +122,45 @@ def create_slack_app(token: str, signing_secret: str):
                 if user_text == "ユーザ登録":
                     register_user(message,user_data)
                     say(text="ユーザ登録が完了しました。")
+                    chat_status = check_chat_status(user_id, channel)
+                    day = chat_status["day"]
+                    status = chat_status["status"]
+                    finish = chat_status["finish"]
+                    if status == ChatStatus.NOT_STARTED:
+                        chat_status = start_chat(user_id, channel)
+                        say(text=f"{day}日目のチャットを開始するには「チャット開始」と打ってください。")
+                        return
                     return
                 say(text="このチャンネルでのユーザ登録が済んでいません。「ユーザ登録」と打ってユーザ登録を行ってください。")
                 return
             
-            day, status = check_chat_status(user_id, channel)
+            chat_status = check_chat_status(user_id, channel)
+            day = chat_status["day"]
+            status = chat_status["status"]
+            finish = chat_status["finish"]
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
-                    day, status = start_chat(user_id, channel)
+                    chat_status = start_chat(user_id, channel)
                     say(text=f"{day}日目のチャットを開始しました")
                     return
-                say(text=f"チャットが始まっていません。{day}日目のチャットを開始するには「チャット開始」と打ってください。")
+                say(text=f"チャットが始まっていません。{day}日目のチャットを開始するには「チャット開始」と打ってください。\nチャット開始するには「チャット開始」と打ってください。また、チャットを終了するには「チャット終了」と打ってください。")
                 return
             if status == ChatStatus.COMPLETED:
                 say("本日のチャットは終了しています")
                 return
             if status == ChatStatus.IN_PROGRESS:
-                if user_text == "チャット終了":
+                if finish == ChatFinish.MUST_FINISH:
+                    say(text=f"{MUST_FINISH_MINUTES}分以上チャットしています。チャットを終了します。")
                     end_chat(user_id, channel)
-                    say(text="チャットを終了しました")
                     return
+                if user_text == "チャット終了":
+                    if finish == ChatFinish.CAN_FINISH:
+                        say(text=f"{CAN_FINISH_MINUTES}分以上チャットしています。チャットを終了します。")
+                        end_chat(user_id, channel)
+                        return
+                    if finish == ChatFinish.NOT_YET:
+                        say(text=f"まだ{CAN_FINISH_MINUTES}分以上チャットしていません。チャットを終了します。")
+                        return
             # チャット進行中
                 username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
                 add_chatdata(user_id, channel, user_text, day)
