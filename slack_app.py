@@ -40,17 +40,20 @@ ren.user_id = "U09AAKK4KMJ"
 ############################## edit here ##############################################
 
 ren.name = "蓮"
-ren.persona = "絶対に対立する性格"
+ren.persona = "共感的な性格"
 
 nagi.name = "凪"
-nagi.persona = "心優しく親切な性格"
+nagi.persona = "絶対に対立する性格"
 
 current_bot = ren
 
+topic = "文系と理系のどちらがいいか"
+
 PERSONALITY_TEMPLATE = "あなたは{username}の対話相手で{persona}の{name}です。\n"
+TOPIC_TEMPLATE = "会話のトピックは{topic}についてです。\n"
 CHATLOG_TEMPLATE = "[{name}] {content}\n"
 
-PROMPT_TEMPLATE = """{personality}。
+PROMPT_TEMPLATE = """{personality}{topic}
 これまでの会話の流れに沿うように応答してください。
 []内の名前は含めないでください。
 
@@ -139,7 +142,14 @@ def create_slack_app(token: str, signing_secret: str):
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
                     chat_status = start_chat(user_id, channel)
-                    say(text=f"{day}日目のチャットを開始しました")
+                    say(text=f"{day}日目のチャットを開始します。")
+                    say(text=f"チャットを終了するには「チャット終了」と打ってください。")
+                    say(text=f"今日のトピックは{topic}です。初めに{current_bot.name}から話しかけます。それでは始めます。")
+                    prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), topic=TOPIC_TEMPLATE.format(topic=topic),chatlog="")
+                    prompt += f"会話が開始された段階です。まずは{username}に意見を聞いてください"
+                    llm_response = get_response(prompt)
+                    current_bot.response(channel, llm_response)
+                    add_chatdata(current_bot.user_id, channel, llm_response, day)
                     return
                 say(text=f"チャットが始まっていません。{day}日目のチャットを開始するには「チャット開始」と打ってください。\nチャット開始するには「チャット開始」と打ってください。また、チャットを終了するには「チャット終了」と打ってください。")
                 return
@@ -163,7 +173,7 @@ def create_slack_app(token: str, signing_secret: str):
                 username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
                 add_chatdata(user_id, channel, user_text, day)
                 chatlog = create_chatlog(user_id, username, channel, day)
-                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), chatlog=chatlog)
+                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), topic=TOPIC_TEMPLATE.format(topic=topic),chatlog=chatlog)
                 logger.info(f"Prompt: {prompt}")
                 llm_response = get_response(prompt)
                 current_bot.response(channel, llm_response)
