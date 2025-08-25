@@ -29,6 +29,8 @@ def judge_chat_status(user_status: dict):
 def judge_chat_finish(user_status: dict):
     current_time = time.time()
     start_time = user_status.get("start_time")
+    if start_time is None:
+        return None
     diff = current_time - start_time
     if diff > MUST_FINISH_MINUTES * 60:
         return ChatFinish.MUST_FINISH
@@ -87,18 +89,6 @@ def check_chat_status(user_id: str, channel_id: str):
                 "status": ChatStatus.NOT_STARTED,
                 "finish": None,
             }
-
-def judge_chat_finish(user_status: dict):
-    current_time = time.time()
-    start_time = user_status.get("start_time")
-    diff = current_time - start_time
-    if start_time is None:
-        return ChatFinish.NOT_YET   
-    elif diff < 10 * 60:
-        return ChatFinish.NOT_YET
-    elif diff > 30 * 60:
-        return ChatFinish.MUST_FINISH
-    return ChatFinish.CAN_FINISH
 
 
 def start_chat(user_id: str, channel_id: str):

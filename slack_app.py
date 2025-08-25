@@ -37,11 +37,10 @@ nagi.user_id = "U09A12GDEEP"
 ren.user_id = "U09AAKK4KMJ"
 
 
-# ログ設定
 ############################## edit here ##############################################
 
 ren.name = "蓮"
-ren.persona = "心優しく親切な性格"
+ren.persona = "絶対に対立する性格"
 
 nagi.name = "凪"
 nagi.persona = "心優しく親切な性格"
@@ -127,7 +126,6 @@ def create_slack_app(token: str, signing_secret: str):
                     status = chat_status["status"]
                     finish = chat_status["finish"]
                     if status == ChatStatus.NOT_STARTED:
-                        chat_status = start_chat(user_id, channel)
                         say(text=f"{day}日目のチャットを開始するには「チャット開始」と打ってください。")
                         return
                     return
@@ -159,7 +157,7 @@ def create_slack_app(token: str, signing_secret: str):
                         end_chat(user_id, channel)
                         return
                     if finish == ChatFinish.NOT_YET:
-                        say(text=f"まだ{CAN_FINISH_MINUTES}分以上チャットしていません。チャットを終了します。")
+                        say(text=f"まだ{CAN_FINISH_MINUTES}分以上チャットしていません。チャットを続けてください。")
                         return
             # チャット進行中
                 username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
