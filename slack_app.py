@@ -11,7 +11,7 @@ from llm import get_response
 from SlackBot import ren, nagi
 from firebase.db import db
 from mockdata import persona, name, topic
-from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES
+from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERYDAY_FORM_URL, PERIODIC_FORM_URL
 
 from check_register_user import check_user_exists, register_user
 from chat_status import ChatStatus, ChatFinish, check_chat_status, start_chat, end_chat 
@@ -63,11 +63,10 @@ PROMPT_TEMPLATE = """{personality}。
 
 
 
-def create_chatlog(user_id: str, username: str, channel: str, day: int):
+def create_chatlog(user_id: str, username: str, chatdatas: list):
     if username is None:
         username = "user"
     chatlog = ""
-    chatdatas = get_chatdata(channel, day)
     for chatdata in chatdatas:
         if chatdata["user_id"] == user_id:
             chatlog += CHATLOG_TEMPLATE.format(name=username, content=chatdata["content"])
@@ -126,7 +125,8 @@ def create_slack_app(token: str, signing_secret: str):
                     status = chat_status["status"]
                     finish = chat_status["finish"]
                     if status == ChatStatus.NOT_STARTED:
-                        say(text=f"{day}日目のチャットを開始するには「チャット開始」と打ってください。")
+                        say(text=f"チャットを開始する前に、以下のフォームに回答してください。\n{EVERYDAY_FORM_URL}")
+                        say(text=f"また、{day}日目のチャットを開始するには「チャット開始」と打ってください。")
                         return
                     return
                 say(text="このチャンネルでのユーザ登録が済んでいません。「ユーザ登録」と打ってユーザ登録を行ってください。")
@@ -136,6 +136,7 @@ def create_slack_app(token: str, signing_secret: str):
             day = chat_status["day"]
             status = chat_status["status"]
             finish = chat_status["finish"]
+            username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
                     chat_status = start_chat(user_id, channel)
@@ -147,23 +148,31 @@ def create_slack_app(token: str, signing_secret: str):
                 say("本日のチャットは終了しています")
                 return
             if status == ChatStatus.IN_PROGRESS:
+                chatdatas = get_chatdata(channel, day)
                 if finish == ChatFinish.MUST_FINISH:
-                    say(text=f"{MUST_FINISH_MINUTES}分以上チャットしています。チャットを終了します。")
+                    comment = f"{MUST_FINISH_MINUTES}分以上チャットしています。チャットを終了します。\n"
+                    comment += f"以下のフォームに回答をお願いします。\n{EVERYDAY_FORM_URL}"
+                    if day == 3 or day == 6:
+                        comment = f"今日は{day}日目です。以下のフォームに回答をお願いします。\n{PERIODIC_FORM_URL}"
+                    say(text=comment)
                     end_chat(user_id, channel)
                     return
                 if user_text == "チャット終了":
-                    if finish == ChatFinish.CAN_FINISH:
-                        say(text=f"{CAN_FINISH_MINUTES}分以上チャットしています。チャットを終了します。")
+                    if finish == ChatFinish.CAN_FINISH and len(chatdatas) >= MINIMUM_TURNS * 2:
+                        comment = f"{CAN_FINISH_MINUTES}分以上チャットしています。チャットを終了します。\n"
+                        comment += f"以下のフォームに回答をお願いします。\n{EVERYDAY_FORM_URL}"
+                        if day == 3 or day == 6:
+                            comment = f"今日は{day}日目です。以下のフォームに回答をお願いします。\n{PERIODIC_FORM_URL}"
+                        say(text=comment)
                         end_chat(user_id, channel)
                         return
                     if finish == ChatFinish.NOT_YET:
-                        say(text=f"まだ{CAN_FINISH_MINUTES}分以上チャットしていません。チャットを続けてください。")
+                        say(text=f"まだ{MINIMUM_TURNS}回以上チャットしていないか、{CAN_FINISH_MINUTES}分以上チャットしていないです。チャットを続けてください。")
                         return
             # チャット進行中
-                username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
                 add_chatdata(user_id, channel, user_text, day)
-                chatlog = create_chatlog(user_id, username, channel, day)
-                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), chatlog=chatlog)
+                chatlog = create_chatlog(user_id, username, chatdatas)
+                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), topic=TOPIC_TEMPLATE.format(topic=topic),chatlog=chatlog)
                 logger.info(f"Prompt: {prompt}")
                 llm_response = get_response(prompt)
                 current_bot.response(channel, llm_response)

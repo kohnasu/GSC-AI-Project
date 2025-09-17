@@ -12,6 +12,7 @@ def add_chatdata(user_id: str, channel_id: str, content: str, day: int):
     db.collection(TABLE_NAME).document().set(cd.model_dump())
     return
 
+# チャンネル内のその日のチャットデータを取得
 def get_chatdata(channel_id: str, day: int):
     TABLE_NAME = TABLE_NAMES[2]
     query = (
