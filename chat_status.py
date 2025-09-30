@@ -75,7 +75,11 @@ def check_chat_status(user_id: str, channel_id: str):
                 "finish": None,
             }
         else:
-            day = max([doc.get("day") for doc in docs]) + 1
+            for doc in docs:
+                if doc.get("start_time") is None:
+                    db.collection(TABLE_NAMES[1]).document(doc.get("user_id") + "_" + doc.get("channel_id") + "_" + doc.get("date")).delete()
+                continue
+            day = max([doc.get("day") for doc in docs],default=0) + 1
             add_user_status({
                 "user_id": user_id,
                 "channel_id": channel_id,

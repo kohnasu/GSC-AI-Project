@@ -65,3 +65,39 @@ nagi = SlackBot(
     verification_token=os.getenv("NAGI_VERIFICATION_TOKEN", None),
     app_level_token=os.getenv("NAGI_APP_LEVEL_TOKEN", None),
 )
+
+hibiki = SlackBot(
+    bot_user_oauth_token=os.getenv("HIBIKI_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("HIBIKI_CLIENT_ID", None),
+    client_secret=os.getenv("HIBIKI_CLIENT_SECRET", None),
+    signing_secret=os.getenv("HIBIKI_SIGNING_SECRET", None),
+    verification_token=os.getenv("HIBIKI_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("HIBIKI_APP_LEVEL_TOKEN", None),
+)
+
+yuki = SlackBot(
+    bot_user_oauth_token=os.getenv("YUKI_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("YUKI_CLIENT_ID", None),
+    client_secret=os.getenv("YUKI_CLIENT_SECRET", None),
+    signing_secret=os.getenv("YUKI_SIGNING_SECRET", None),
+    verification_token=os.getenv("YUKI_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("YUKI_APP_LEVEL_TOKEN", None),
+)
+
+chihiro = SlackBot(
+    bot_user_oauth_token=os.getenv("CHIHIRO_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("CHIHIRO_CLIENT_ID", None),
+    client_secret=os.getenv("CHIHIRO_CLIENT_SECRET", None),
+    signing_secret=os.getenv("CHIHIRO_SIGNING_SECRET", None),
+    verification_token=os.getenv("CHIHIRO_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("CHIHIRO_APP_LEVEL_TOKEN", None),
+)
+
+nagisa = SlackBot(
+    bot_user_oauth_token=os.getenv("NAGISA_BOT_USER_OAUTH_TOKEN", None),
+    client_id=os.getenv("NAGISA_CLIENT_ID", None),
+    client_secret=os.getenv("NAGISA_CLIENT_SECRET", None),
+    signing_secret=os.getenv("NAGISA_SIGNING_SECRET", None),
+    verification_token=os.getenv("NAGISA_VERIFICATION_TOKEN", None),
+    app_level_token=os.getenv("NAGISA_APP_LEVEL_TOKEN", None),
+)

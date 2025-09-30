@@ -7,8 +7,12 @@
 from slack_bolt import App 
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 import logging
+from time import time
+import pytz
+from datetime import datetime
+
 from llm import get_response
-from SlackBot import ren, nagi
+from SlackBot import ren, nagi, hibiki, yuki, chihiro, nagisa
 from firebase.db import db
 from mockdata import persona, name, topic
 from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERYDAY_FORM_URL, PERIODIC_FORM_URL
@@ -16,6 +20,8 @@ from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERY
 from check_register_user import check_user_exists, register_user
 from chat_status import ChatStatus, ChatFinish, check_chat_status, start_chat, end_chat 
 from process_conversation import add_chatdata, get_chatdata
+
+chatbot_list = [nagi, ren, hibiki, yuki, chihiro, nagisa]
 
 chatbots = {
     "nagi": {
@@ -26,15 +32,39 @@ chatbots = {
         "chatbot": ren,
         "user_id": "U09AAKK4KMJ",
     },
+    "hibiki": {
+        "chatbot": hibiki,
+        "user_id": "U09HD01CNCX",
+    },
+    "yuki": {
+        "chatbot": yuki,
+        "user_id": "U09HD17UDPH",
+    },
+    "chihiro": {
+        "chatbot": chihiro,
+        "user_id": "U09HSKET7GW",
+    },
+    "nagisa": {
+        "chatbot": nagisa,
+        "user_id": "U09HSJVGG06",
+    },
 }
 
 chatbot_map = {
     "U09A12GDEE": nagi,
     "U09AAKK4KMJ": ren,
+    "U09HD01CNCX": hibiki,
+    "U09HD17UDPH": yuki,
+    "U09HSKET7GW": chihiro,
+    "U09HSJVGG06": nagisa,
 }
 
 nagi.user_id = "U09A12GDEEP"
 ren.user_id = "U09AAKK4KMJ"
+hibiki.user_id = "U09HD01CNCX"
+yuki.user_id = "U09HD17UDPH"
+chihiro.user_id = "U09HSKET7GW"
+nagisa.user_id = "U09HSJVGG06"
 
 
 ############################## edit here ##############################################
@@ -99,6 +129,7 @@ def create_slack_app(token: str, signing_secret: str):
             user_id = message.get("user")
             # logger.info(f"Received message from user {user_id}: {message}")
             user_data = app.client.users_info(user=user_id)
+            logger.info(f"User data: {user_data}")
             
             # ボットメッセージは無視
             if message.get("bot_id"):
@@ -119,7 +150,7 @@ def create_slack_app(token: str, signing_secret: str):
             if not user_exists:
                 if user_text == "ユーザ登録":
                     register_user(message,user_data)
-                    say(text="ユーザ登録が完了しました。")
+                    say(text="ユーザ登録が完了しました。") 
                     chat_status = check_chat_status(user_id, channel)
                     day = chat_status["day"]
                     status = chat_status["status"]
@@ -139,6 +170,12 @@ def create_slack_app(token: str, signing_secret: str):
             username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
+                    # 日本時間23時以降はチャット開始不可
+                    jst = pytz.timezone('Asia/Tokyo')
+                    now_jst = datetime.now(jst)
+                    if now_jst.hour >= 23:
+                        say(text="日本時間23時以降はチャットを開始できません。翌日になってから「チャット開始」と打ってください。")
+                        return
                     chat_status = start_chat(user_id, channel)
                     say(text=f"{day}日目のチャットを開始しました")
                     return
@@ -172,7 +209,7 @@ def create_slack_app(token: str, signing_secret: str):
             # チャット進行中
                 add_chatdata(user_id, channel, user_text, day)
                 chatlog = create_chatlog(user_id, username, chatdatas)
-                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name), topic=TOPIC_TEMPLATE.format(topic=topic),chatlog=chatlog)
+                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name),chatlog=chatlog)
                 logger.info(f"Prompt: {prompt}")
                 llm_response = get_response(prompt)
                 current_bot.response(channel, llm_response)
