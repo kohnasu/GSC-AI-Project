@@ -3,6 +3,7 @@ from firebase.models import TABLE_NAMES, ChatData
 from firebase.db import db
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 def add_chatdata(user_id: str, channel_id: str, content: str, day: int):
@@ -10,7 +11,7 @@ def add_chatdata(user_id: str, channel_id: str, content: str, day: int):
     cd = ChatData(user_id=user_id, channel_id=channel_id, content=content, day=day, timestamp=timestamp)
     TABLE_NAME = TABLE_NAMES[2]
     db.collection(TABLE_NAME).document().set(cd.model_dump())
-    return
+    return cd.model_dump()
 
 # チャンネル内のその日のチャットデータを取得
 def get_chatdata(channel_id: str, day: int):

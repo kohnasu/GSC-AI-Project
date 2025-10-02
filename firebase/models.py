@@ -12,7 +12,7 @@ class User(BaseModel):
     email: str | None = None
     display_name: str | None = None
     real_name: str | None = None
-    schedule: dict | None = None
+    setting_done: bool = False
 
 class UserStatus(BaseModel):
     user_id: str
