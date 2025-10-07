@@ -120,7 +120,7 @@ def create_chatlog(user_id: str, username: str, chatdatas: list):
         elif chatdata["user_id"] in chatbot_map:
             chatlog += CHATLOG_TEMPLATE.format(name=chatbot_map[chatdata["user_id"]].name, content=chatdata["content"])
         else:
-            logger.warning(f"Unknown user {chatdata["user_id"]} in chatlog")
+            logger.warning(f"Unknown user {chatdata['user_id']} in chatlog")
     return chatlog
 
 logging.basicConfig(level=logging.INFO)
