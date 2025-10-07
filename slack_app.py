@@ -15,7 +15,7 @@ from SlackBot import ren, nagi, hibiki, yuki, chihiro, nagisa
 from firebase.db import db
 from firebase.models import ChatData
 from mockdata import persona, name, topic
-from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERYDAY_FORM_URL, PERIODIC_FORM_URL
+from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERYDAY_FORM_URL, PERIODIC_FORM_URL, YUGO_USER_ID, KOH_USER_ID
 
 from check_register_user import check_user_register_status, UserRegisterStatus, register_user
 from chat_status import ChatStatus, ChatFinish, check_chat_status, start_chat, end_chat 
@@ -129,14 +129,6 @@ logger = logging.getLogger(__name__)
 
 def create_slack_app(token: str, signing_secret: str):
     app = App(token=token, signing_secret=signing_secret)
-
-    # すべてのイベントをログに出力
-    # @app.middleware
-    # def log_request(logger, body, next):
-    #     logger.info(f"Received event: {body.get('event', {}).get('type', 'unknown')}")
-    #     logger.info(f"Full body: {body}")
-    #     return next()
-
     @app.event("message")
     def handle_message_event(message, say):
         try:
@@ -233,6 +225,65 @@ def create_slack_app(token: str, signing_secret: str):
                 current_bot.response(channel, llm_response)
                 add_chatdata(current_bot.user_id, channel, llm_response, day)
                 return
+            
+        except Exception as e:
+            logger.error(f"Error processing message: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            try:
+                say(text="申し訳ございません。エラーが発生しました。")
+            except:
+                logger.error("Could not send error message to user")
+    return app
+
+
+def create_slack_app_test(token: str, signing_secret: str):
+    app = App(token=token, signing_secret=signing_secret)
+
+    # すべてのイベントをログに出力
+    # @app.middleware
+    # def log_request(logger, body, next):
+    #     logger.info(f"Received event: {body.get('event', {}).get('type', 'unknown')}")
+    #     logger.info(f"Full body: {body}")
+    #     return next()
+
+    chatlogs = {}
+
+
+    @app.event("message")
+    def handle_message_event(message, say):
+        try:
+            user_id = message.get("user")
+            # logger.info(f"Received message from user {user_id}: {message}")
+            user_data = app.client.users_info(user=user_id)
+            logger.info(f"User data: {user_data}")
+            # ボットメッセージは無視
+            if message.get("bot_id"):
+                logger.info("Ignoring bot message")
+                return
+            if user_id not in [YUGO_USER_ID, KOH_USER_ID]:
+                say(text="このユーザーはテストモードを使用できません")
+                return
+            channel = message.get("channel")
+            user_text = message.get("text")
+            username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
+            chatdatas = chatlogs.setdefault(channel, [])
+            chatdatas.append({
+                "user_id": user_id,
+                "content": user_text,
+                "timestamp": time()
+            })
+            chatlog = create_chatlog(user_id, username, chatdatas)
+            prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name),chatlog=chatlog)
+            logger.info(f"Prompt: {prompt}")
+            llm_response = get_response(prompt)
+            current_bot.response(channel, llm_response)
+            chatdatas.append({
+                "user_id": current_bot.user_id,
+                "content": llm_response,
+                "timestamp": time()
+            })
+            return
             
         except Exception as e:
             logger.error(f"Error processing message: {e}")
