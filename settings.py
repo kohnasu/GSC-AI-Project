@@ -65,7 +65,66 @@ SETTINGS = [
                 "bot_persona": "行き当たりばったりの旅の楽しさを語る",
             },
         ]
-    }
+    },
+    {
+        "user_id": KOH_USER_ID,
+        "settings": [
+            {
+                "day": 1,
+                "topic_name": "理系と文系どちらが嬉しいか",
+                "user_position": "理系",
+                "bot_position": "共感",
+                "bot": ren,
+                "bot_name": "蓮",
+                "bot_persona": "理系として活動してるけど文系がいいと思っている",
+            },
+            {
+                "day": 2,
+                "topic_name": "犬派と猫派どちらが好きか",
+                "user_position": "犬派",
+                "bot_position": "否定",
+                "bot": nagi,
+                "bot_name": "凪",
+                "bot_persona": "猫派で猫の魅力を熱く語る",
+            },
+            {
+                "day": 3,
+                "topic_name": "朝型と夜型どちらが良いか",
+                "user_position": "夜型",
+                "bot_position": "共感",
+                "bot": hibiki,
+                "bot_name": "響",
+                "bot_persona": "夜型で夜の静けさが好き",
+            },
+            {
+                "day": 4,
+                "topic_name": "都会と田舎どちらに住みたいか",
+                "user_position": "都会",
+                "bot_position": "否定",
+                "bot": yuki,
+                "bot_name": "雪",
+                "bot_persona": "田舎の自然や静けさを推す",
+            },
+            {
+                "day": 5,
+                "topic_name": "和食と洋食どちらが好きか",
+                "user_position": "洋食",
+                "bot_position": "共感",
+                "bot": chihiro,
+                "bot_name": "千尋",
+                "bot_persona": "洋食好きで色々な国の料理に詳しい",
+            },
+            {
+                "day": 6,
+                "topic_name": "旅行は計画派か行き当たりばったり派か",
+                "user_position": "計画派",
+                "bot_position": "否定",
+                "bot": nagisa,
+                "bot_name": "渚",
+                "bot_persona": "行き当たりばったりの旅の楽しさを語る",
+            },
+        ]
+    },
 ]
 
 
