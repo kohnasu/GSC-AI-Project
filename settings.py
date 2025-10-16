@@ -2,7 +2,7 @@ from config import YUGO_USER_ID, KOH_USER_ID
 from SlackBot import ren, nagi, hibiki, yuki, chihiro, nagisa
 import logging
 
-setting_attrs = ["day", "topic_name", "user_position", "bot_position", "bot", "bot_name", "bot_persona"]
+setting_attrs = ["day", "topic_name", "user_position", "bot_position", "bot", "bot_name", "bot_persona", "first_message"]
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ SETTINGS = [
                 "bot": ren,
                 "bot_name": "蓮",
                 "bot_persona": "理系として活動してるけど文系がいいと思っている",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 2,
@@ -27,6 +28,7 @@ SETTINGS = [
                 "bot": nagi,
                 "bot_name": "凪",
                 "bot_persona": "猫派で猫の魅力を熱く語る",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 3,
@@ -36,6 +38,7 @@ SETTINGS = [
                 "bot": hibiki,
                 "bot_name": "響",
                 "bot_persona": "夜型で夜の静けさが好き",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 4,
@@ -45,6 +48,7 @@ SETTINGS = [
                 "bot": yuki,
                 "bot_name": "雪",
                 "bot_persona": "田舎の自然や静けさを推す",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 5,
@@ -54,6 +58,7 @@ SETTINGS = [
                 "bot": chihiro,
                 "bot_name": "千尋",
                 "bot_persona": "洋食好きで色々な国の料理に詳しい",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 6,
@@ -63,6 +68,7 @@ SETTINGS = [
                 "bot": nagisa,
                 "bot_name": "渚",
                 "bot_persona": "行き当たりばったりの旅の楽しさを語る",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
         ]
     },
@@ -77,6 +83,7 @@ SETTINGS = [
                 "bot": ren,
                 "bot_name": "蓮",
                 "bot_persona": "理系として活動してるけど文系がいいと思っている",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 2,
@@ -86,6 +93,7 @@ SETTINGS = [
                 "bot": nagi,
                 "bot_name": "凪",
                 "bot_persona": "猫派で猫の魅力を熱く語る",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 3,
@@ -95,6 +103,7 @@ SETTINGS = [
                 "bot": hibiki,
                 "bot_name": "響",
                 "bot_persona": "夜型で夜の静けさが好き",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 4,
@@ -104,6 +113,7 @@ SETTINGS = [
                 "bot": yuki,
                 "bot_name": "雪",
                 "bot_persona": "田舎の自然や静けさを推す",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 5,
@@ -113,6 +123,7 @@ SETTINGS = [
                 "bot": chihiro,
                 "bot_name": "千尋",
                 "bot_persona": "洋食好きで色々な国の料理に詳しい",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
             {
                 "day": 6,
@@ -122,6 +133,7 @@ SETTINGS = [
                 "bot": nagisa,
                 "bot_name": "渚",
                 "bot_persona": "行き当たりばったりの旅の楽しさを語る",
+                "first_message": "こんにちは！どうしたのかな？話したいことがあれば教えてね。",
             },
         ]
     },
@@ -153,6 +165,22 @@ def check_all_settings():
             logger.error(f"User {s['user_id']} has incomplete settings")
             return False
     return True
+
+
+def get_setting(user_id: str, day: int):
+    for s in SETTINGS:
+        if s["user_id"] == user_id:
+            settings = s["settings"]
+            break
+    else:
+        logger.error(f"User {user_id} has no settings")
+        return None
+    for setting in settings:
+        if setting["day"] == day:
+            return setting
+    else:
+        logger.error(f"User {user_id} has no setting for day {day}")
+        return None
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

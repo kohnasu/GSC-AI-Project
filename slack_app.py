@@ -12,10 +12,8 @@ import pytz
 from datetime import datetime
 from llm import get_response
 from SlackBot import ren, nagi, hibiki, yuki, chihiro, nagisa
-from firebase.db import db
-from firebase.models import ChatData
-from mockdata import persona, name, topic
 from config import CAN_FINISH_MINUTES, MUST_FINISH_MINUTES, MINIMUM_TURNS, EVERYDAY_FORM_URL, PERIODIC_FORM_URL, YUGO_USER_ID, KOH_USER_ID
+from settings import SETTINGS, check_settings, get_setting
 
 from check_register_user import check_user_register_status, UserRegisterStatus, register_user
 from chat_status import ChatStatus, ChatFinish, check_chat_status, start_chat, end_chat 
@@ -51,7 +49,7 @@ chatbots = {
 }
 
 chatbot_map = {
-    "U09A12GDEE": nagi,
+    "U09A12GDEEP": nagi,
     "U09AAKK4KMJ": ren,
     "U09HD01CNCX": hibiki,
     "U09HD17UDPH": yuki,
@@ -69,23 +67,6 @@ nagisa.user_id = "U09HSJVGG06"
 
 ############################## edit here ##############################################
 
-ren.name = "蓮"
-ren.persona = ""
-
-nagi.name = "凪"
-nagi.persona = ""
-
-hibiki.name = "響"
-hibiki.persona = "" 
-
-yuki.name = "有希"
-yuki.persona = ""
-
-chihiro.name = "千尋"
-chihiro.persona = ""
-
-nagisa.name = "渚"
-nagisa.persona = ""
 
 current_bot = ren
 
@@ -169,12 +150,26 @@ def create_slack_app(token: str, signing_secret: str):
             else:
                 logger.error(f"Unknown user register status: {user_register_status}")
                 return
+
+            if not check_settings(user_id):
+                say(text="ユーザー設定が完了していません。「ユーザー登録」と打ってユーザー登録を行ってください。")
+                return
             
             chat_status = check_chat_status(user_id, channel)
             day = chat_status["day"]
             status = chat_status["status"]
             finish = chat_status["finish"]
             username = user_data.get("user", {}).get("profile", {}).get("display_name", None) or user_data.get("user", {}).get("profile", {}).get("real_name", None)
+
+            setting = get_setting(user_id, day)
+            topic_name = setting["topic_name"]
+            user_position = setting["user_position"]
+            bot_position = setting["bot_position"]
+            bot = setting["bot"]
+            bot_name = setting["bot_name"]
+            bot_persona = setting["bot_persona"]
+            first_message = setting["first_message"]
+
             if status == ChatStatus.NOT_STARTED:
                 if user_text == "チャット開始":
                     jst = pytz.timezone('Asia/Tokyo')
@@ -184,6 +179,8 @@ def create_slack_app(token: str, signing_secret: str):
                         return
                     chat_status = start_chat(user_id, channel)
                     say(text=f"{day}日目のチャットを開始しました")
+                    bot.response(channel, first_message)
+                    add_chatdata(bot.user_id, channel, first_message, day)
                     return
                 say(text=f"チャットが始まっていません。{day}日目のチャットを開始するには「チャット開始」と打ってください。\nチャット開始するには「チャット開始」と打ってください。また、チャットを終了するには「チャット終了」と打ってください。")
                 if day == 1:
@@ -219,11 +216,11 @@ def create_slack_app(token: str, signing_secret: str):
                 cd = add_chatdata(user_id, channel, user_text, day)
 
                 chatlog = create_chatlog(user_id, username, chatdatas + [cd])
-                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=current_bot.persona, name=current_bot.name),chatlog=chatlog)
+                prompt = PROMPT_TEMPLATE.format(personality=PERSONALITY_TEMPLATE.format(username=username, persona=bot_persona, name=bot_name),chatlog=chatlog)
                 logger.info(f"Prompt: {prompt}")
                 llm_response = get_response(prompt)
-                current_bot.response(channel, llm_response)
-                add_chatdata(current_bot.user_id, channel, llm_response, day)
+                bot.response(channel, llm_response)
+                add_chatdata(bot.user_id, channel, llm_response, day)
                 return
             
         except Exception as e:

@@ -101,3 +101,28 @@ nagisa = SlackBot(
     verification_token=os.getenv("NAGISA_VERIFICATION_TOKEN", None),
     app_level_token=os.getenv("NAGISA_APP_LEVEL_TOKEN", None),
 )
+
+ren.name = "蓮"
+ren.persona = ""
+
+nagi.name = "凪"
+nagi.persona = ""
+
+hibiki.name = "響"
+hibiki.persona = "" 
+
+yuki.name = "有希"
+yuki.persona = ""
+
+chihiro.name = "千尋"
+chihiro.persona = ""
+
+nagisa.name = "渚"
+nagisa.persona = ""
+
+nagi.user_id = "U09A12GDEEP"
+ren.user_id = "U09AAKK4KMJ"
+hibiki.user_id = "U09HD01CNCX"
+yuki.user_id = "U09HD17UDPH"
+chihiro.user_id = "U09HSKET7GW"
+nagisa.user_id = "U09HSJVGG06"

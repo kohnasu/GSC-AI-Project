@@ -3,3 +3,5 @@ env
 firebase-key.json
 
 __pycache__/
+
+storage_backup/
